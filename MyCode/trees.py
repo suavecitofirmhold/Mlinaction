@@ -1,4 +1,5 @@
 from math import log
+import operator
 #机器学习实战P35
 def calcShannonEnt(dataSet):
     numEntries = len(dataSet)
@@ -47,9 +48,36 @@ def chooseBestFeatureToSplit(dataSet):
             bestFeature = i
     return bestFeature
 
+def majorityCnt(classList):
+    classCount={}
+    for vote in classList:
+        if vote not in classCount.keys():
+            classCount[vote] = 0
+        classCount[vote] += 1
+    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)
+    return sortedClassCount[0][0]
+
+def createTree(dataSet, labels):
+    classList = [example[-1] for example in dataSet]
+    if classList.count(classList[0]) == len(classList):
+        return classList[0] # 类别完全相同则停止继续划分
+    if len(dataSet[0]) == 1: #????
+        return majorityCnt(classList) #遍历完所有特征时返回出现次数最多的类别
+    bestFeat = chooseBestFeatureToSplit(dataSet)
+    bestFeatLabel = labels[bestFeat]
+    myTree = {bestFeatLabel:{}} #???
+    del(labels[bestFeat])
+    featValues = [example[bestFeat] for example in dataSet]
+    uniqueVals = set(featValues)
+    for value in uniqueVals:
+        subLabels = labels[:] #列表参数是按照引用方式传递
+        myTree[bestFeatLabel][value] = createTree(splitDataSet(dataSet, bestFeat, value), subLabels)
+    return myTree
+
 if __name__ == '__main__':
-    myMat, labesl = createDataSet()
+    myMat, labels = createDataSet()
     print(myMat)
     #print(calcShannonEnt(myMat))
 #    splitDataSet(myMat, 0, 1)
-    print(chooseBestFeatureToSplit(myMat))
+    #print(chooseBestFeatureToSplit(myMat))
+    print(createTree(myMat, labels))
